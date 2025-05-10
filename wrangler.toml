@@ -1,0 +1,7 @@
+name = "painus-telegram-bot"
+main = "dist/worker.js"
+compatibility_date = "2025-05-09"
+
+[[kv_namespaces]]
+binding = "MEMORY"
+id = "17dfaeea6e404025acda1de4100535a4"

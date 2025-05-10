@@ -1,0 +1,563 @@
+/* DOS/Windows theme styling for Buy Page */
+.buy-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1rem 1.5rem;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.buy-page-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+  align-items: center;
+}
+
+/* Adjust title size */
+.painus-title {
+  font-size: 5.5rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  margin: 0.5rem 0 0.3rem;
+  color: #FFFFFF;
+  font-family: 'DOS', 'Courier New', monospace;
+  text-transform: uppercase;
+  line-height: 1;
+  position: relative;
+  display: inline-block;
+  filter: drop-shadow(6px 6px 0px #000000);
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+/* Set fixed width for both containers */
+.title-container, .terminal-container {
+  width: 600px; /* Fixed width for both containers */
+  max-width: 90%; /* Responsive on smaller screens */
+  box-sizing: border-box;
+  border: 2px solid #55AAFF;
+}
+
+/* Title container specific styles */
+.title-container {
+  background-color: rgba(0, 0, 85, 0.5);
+  padding: 0.7rem 1.5rem 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.dos-header {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Adjust tagline */
+.tagline {
+  font-size: 0.9rem;
+  margin: 0 0 0.3rem;
+  color: #FFFFFF;
+  font-family: 'Courier New', Courier, monospace;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  letter-spacing: 0.1em;
+  font-weight: 500;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+/* Adjust buy container */
+.buy-container {
+  margin: 1rem auto;
+  padding: 1rem;
+  border: 2px solid #55AAFF;
+  background-color: rgba(0, 0, 85, 0.5);
+  max-width: 90%;
+  text-align: center;
+}
+
+.buy-container h2 {
+  font-size: 1.2rem;
+  margin: 0.5rem 0 1rem;
+  color: #FFFFFF;
+  font-family: 'DOS', 'Courier New', monospace;
+  text-transform: uppercase;
+}
+
+.buy-button {
+  background-color: #00AA00;
+  color: white;
+  border: 1px solid #00FF00;
+  padding: 0.3rem 0.8rem;
+  font-family: 'DOS', 'Courier New', monospace;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.buy-button:hover {
+  background-color: #00CC00;
+  transform: translateY(-1px);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.buy-button:active {
+  transform: translateY(1px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.5);
+}
+
+.buy-button.loading {
+  background-color: #555555;
+  cursor: not-allowed;
+}
+
+.telegram-section {
+  margin-top: 1rem;
+}
+
+.telegram-button {
+  display: inline-block;
+  background-color: #0088CC;
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border: 2px solid #00AAFF;
+  font-family: 'DOS', 'Courier New', monospace;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+
+.telegram-button:hover {
+  background-color: #0099EE;
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Terminal container styling */
+.terminal-container {
+  background-color: rgba(0, 0, 85, 0.5);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin-bottom: 1rem;
+  align-self: center;
+}
+
+/* Terminal header with title and buy button */
+.terminal-header {
+  background-color: #0055AA;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  font-family: 'DOS', 'Courier New', monospace;
+  font-weight: bold;
+  border-bottom: 2px solid #00AAFF;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.terminal-title {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Wallet status display */
+.wallet-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid #00AAFF;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.wallet-status.not-connected {
+  color: #FF5555;
+}
+
+.wallet-status.connected {
+  color: #00FFFF;
+}
+
+.network-badge {
+  background-color: #0055AA;
+  color: white;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.connect-wallet-button {
+  background-color: #0055AA;
+  color: white;
+  border: 1px solid #00AAFF;
+  padding: 0.2rem 0.5rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.connect-wallet-button:hover {
+  background-color: #0077CC;
+}
+
+/* Terminal output area */
+.terminal-output {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  text-align: left;
+}
+
+.terminal-line {
+  margin-bottom: 0.3rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: left;
+}
+
+.terminal-line.system {
+  color: #00FF00; /* Green for system messages */
+}
+
+.terminal-line.command {
+  color: #FFFFFF; /* White for commands */
+}
+
+.terminal-line.success {
+  color: #00FFFF; /* Cyan for success messages */
+}
+
+.terminal-line.error {
+  color: #FF5555; /* Red for error messages */
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 0.6rem;
+  height: 1rem;
+  background-color: #00FF00;
+  margin-left: 0.2rem;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.dos-window-title {
+  background-color: #0055AA;
+  color: white;
+  padding: 0.3rem 0.5rem;
+  font-family: 'DOS', 'Courier New', monospace;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid #00AAFF;
+}
+
+/* Modal styles for the popup */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.painus-info-modal {
+  background-color: #000066;
+  border: 3px solid #00AAFF;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.modal-header {
+  background-color: #0055AA;
+  padding: 0.7rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #00AAFF;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: white;
+  font-family: 'DOS', 'Courier New', monospace;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-content {
+  padding: 1rem;
+  color: #FFFFFF;
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1.5;
+}
+
+.modal-content p {
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Update the crypto wisdom styling for better positioning */
+
+.crypto-wisdom {
+  font-size: 0.9rem; /* Reduced from 1.1rem */
+  margin: 0 auto 1rem; /* Reduced margin */
+  color: #FFFF00;
+  font-family: 'Courier New', Courier, monospace;
+  max-width: 700px;
+  letter-spacing: 0.05em;
+  font-style: italic;
+  padding: 0.3rem; /* Reduced padding */
+  border-top: 1px dashed rgba(255, 255, 0, 0.3);
+  border-bottom: 1px dashed rgba(255, 255, 0, 0.3);
+}
+
+/* Add flashing animation for the guarantee text */
+
+@keyframes flashColors {
+  0%, 100% {
+    color: #FF55FF; /* Hot pink */
+    text-shadow: 1px 1px 2px rgba(255, 85, 255, 0.7);
+  }
+  50% {
+    color: #00FF00; /* Bright green */
+    text-shadow: 1px 1px 2px rgba(0, 255, 0, 0.7);
+  }
+}
+
+.guarantee {
+  font-size: 1.2rem; /* Reduced from 1.4rem */
+  margin: 0 auto 1rem; /* Reduced margin */
+  font-family: 'DOS', 'Courier New', monospace;
+  max-width: 800px;
+  letter-spacing: 0.1em;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 0.3rem 0; /* Reduced padding */
+  animation: flashColors 1.2s infinite;
+}
+
+/* Add styles for the "What is PAINUS?" button and info section */
+
+.what-is-painus-button {
+  background-color: #0055AA;
+  color: white;
+  border: 2px solid #00AAFF;
+  padding: 0.5rem 1.2rem; /* Reduced padding */
+  font-family: 'DOS', 'Courier New', monospace;
+  font-size: 1rem; /* Reduced from 1.2rem */
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0 0 1rem; /* Reduced margin */
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+  display: inline-block;
+}
+
+.what-is-painus-button:hover {
+  background-color: #0077CC;
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.5);
+}
+
+.what-is-painus-button:active {
+  transform: translateY(1px);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.painus-info {
+  background-color: rgba(0, 40, 80, 0.8);
+  border: 2px solid #00AAFF;
+  padding: 1.5rem;
+  margin: 0 auto 2rem; /* Consistent 2rem bottom margin */
+  max-width: 800px;
+  color: #FFFFFF;
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1.6;
+  text-align: left;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.painus-info p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Terminal styling */
+.terminal {
+  background-color: #000000; /* Pure black background */
+  color: #00FF00; /* Bright green text */
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 300px; /* Fixed height for terminal */
+  overflow: hidden;
+}
+
+/* Add warning popup styling */
+
+/* Warning popup styles */
+.warning-overlay {
+  background-color: rgba(0, 0, 0, 0.85); /* Darker overlay for urgency */
+  z-index: 1100; /* Higher than regular modal */
+}
+
+.warning-modal {
+  background-color: #330000; /* Dark red background */
+  border: 3px solid #FF0000; /* Red border */
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 0 30px rgba(255, 0, 0, 0.7); /* Red glow */
+  animation: warningPulse 2s infinite alternate;
+}
+
+.warning-header {
+  background-color: #AA0000; /* Bright red header */
+  padding: 0.7rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #FF0000;
+}
+
+.warning-header h2 {
+  margin: 0;
+  color: white;
+  font-family: 'DOS', 'Courier New', monospace;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  animation: textBlink 1s infinite;
+}
+
+.warning-content {
+  padding: 1.5rem;
+  color: #FFFFFF;
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.warning-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: rotate 2s infinite linear;
+}
+
+.warning-text {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  font-weight: bold;
+  color: #FF5555;
+  text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+}
+
+.warning-subtext {
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  color: #FF9999;
+  font-style: italic;
+}
+
+.warning-button {
+  background-color: #FFFF00; /* Yellow button for attention */
+  color: #000000; /* Black text for contrast */
+  border: 2px solid #FF0000;
+  padding: 0.8rem 1.5rem;
+  font-family: 'DOS', 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 10px rgba(255, 255, 0, 0.7);
+  display: inline-block;
+  margin: 0.5rem auto;
+  animation: pulse 1.5s infinite;
+  text-decoration: none;
+}
+
+.warning-button:hover {
+  background-color: #FF0000;
+  color: #FFFFFF;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.9);
+}
+
+@keyframes warningPulse {
+  from { box-shadow: 0 0 20px rgba(255, 0, 0, 0.7); }
+  to { box-shadow: 0 0 40px rgba(255, 0, 0, 0.9); }
+}
+
+@keyframes textBlink {
+  0%, 49% { color: white; }
+  50%, 100% { color: #FFFF00; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+} 
