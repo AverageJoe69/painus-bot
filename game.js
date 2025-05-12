@@ -50,5 +50,15 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
             content: `You are Painus — a 35-year-old crypto bro. Host of a twisted blockchain game. Cocky, intense, ruthless.`
           },
           {
-            role
-        }
+            role: "user",
+            content: userInput
+          }
+        ],
+        max_tokens: 250
+      })
+    });
+  
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || "Painus glitched. Say something alpha.";
+  }
+  
