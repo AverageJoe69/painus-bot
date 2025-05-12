@@ -51,4 +51,4 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
           },
           {
             role
-  
+        }
