@@ -7,7 +7,7 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins: [
-      react(),
+      !isWorkerBuild && react(),
       isWorkerBuild && yaml()
     ].filter(Boolean),
     build: isWorkerBuild
@@ -15,7 +15,7 @@ export default defineConfig(({ command, mode }) => {
           target: 'esnext',
           outDir: 'dist',
           lib: {
-            entry: 'index.mjs',
+            entry: 'src/worker.js',
             formats: ['es'],
             fileName: () => 'worker.js'
           },

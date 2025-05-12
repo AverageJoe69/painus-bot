@@ -2,9 +2,10 @@ import { ethers } from "ethers";
 
 export default {
   async fetch(request, env, ctx) {
-    const pathname = new URL(request.url).pathname;
+    const url = new URL(request.url);
 
-    if (request.method === "POST" && pathname === "/send-eth") {
+    // ETH Transfer Endpoint
+    if (request.method === "POST" && url.pathname === "/send-eth") {
       try {
         const { to, amount } = await request.json();
 
@@ -13,7 +14,7 @@ export default {
 
         const tx = await wallet.sendTransaction({
           to,
-          value: ethers.parseEther(amount),
+          value: ethers.parseEther(amount)
         });
 
         return new Response(JSON.stringify({ txHash: tx.hash }), {
@@ -25,9 +26,15 @@ export default {
       }
     }
 
-    if (request.method === "POST" && pathname === "/") {
+    // Telegram Webhook Handler (POST to /)
+    if (request.method === "POST" && url.pathname === "/") {
       try {
         const { message } = await request.json();
+
+        if (!message || !message.chat || !message.text) {
+          return new Response("No message to process", { status: 200 });
+        }
+
         const chatId = message.chat.id;
         const userMessage = message.text;
 
@@ -35,14 +42,14 @@ export default {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            Authorization: `Bearer ${env.OPENAI_API_KEY}`
           },
           body: JSON.stringify({
             model: "gpt-4o",
             messages: [
               {
                 role: "system",
-                content: `You are Painus — a 35-year-old crypto bro. Host of a twisted blockchain game. Cocky, intense, ruthless.`,
+                content: `You are Painus — a 35-year-old crypto bro. Host of a twisted blockchain game. Cocky, intense, ruthless.`
               },
               {
                 role: "user",
@@ -50,7 +57,7 @@ export default {
               }
             ],
             max_tokens: 250
-          }),
+          })
         });
 
         const data = await gptResponse.json();
@@ -61,17 +68,15 @@ export default {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: chatId,
-            text: reply,
-          }),
+            text: reply
+          })
         });
 
-        return new Response("OK");
+        return new Response("OK", { status: 200 });
       } catch (err) {
-        console.error("Worker Error:", err);
+        console.error("Telegram Handler Error:", err);
         return new Response("Painus glitched. Try again later.", { status: 500 });
       }
     }
 
-    return new Response("Not found", { status: 404 });
-  }
-};
+    // Unsupported route
