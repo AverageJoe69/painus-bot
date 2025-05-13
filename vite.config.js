@@ -8,7 +8,9 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       !isWorkerBuild && react(),
-      isWorkerBuild && stringPlugin()
+      isWorkerBuild && stringPlugin({
+        include: ['**/*.yaml', '**/*.yml']
+      })
     ].filter(Boolean),
     build: isWorkerBuild
       ? {
