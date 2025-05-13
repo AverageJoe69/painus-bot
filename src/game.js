@@ -13,6 +13,7 @@ export async function loadPainusProfile() {
 }
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
+  const painusProfile = await loadPainusProfile();
   let state = await env.MEMORY.get("game_state", "json") || {
     players: [],
     phase: "recruiting",
@@ -24,7 +25,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   const msg = userMessage.toLowerCase().trim();
 
   if (msg.startsWith("/debug")) {
-    await handleDebugCommand(msg, chatId, env, state);
+    await handleDebugCommand(msg, chatId, env, state, painusProfile);
     return true;
   }
 
@@ -82,12 +83,12 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     state.chatHistory[chatId].push(userMessage);
     await env.MEMORY.put("game_state", JSON.stringify(state));
 
-    const gptReply = await getPainusReply(env, userMessage);
+    const gptReply = await getPainusReply(env, userMessage, painusProfile);
     await sendMessage(env, chatId, gptReply);
   }
 }
 
-async function handleDebugCommand(msg, chatId, env, state) {
+async function handleDebugCommand(msg, chatId, env, state, painusProfile) {
   if (msg.includes("reset")) {
     await env.MEMORY.delete("game_state");
     await sendMessage(env, chatId, `🧹 Dev: Game state reset.`);
@@ -172,7 +173,7 @@ async function pickWinner(env, state) {
     }, 0);
 
     const convo = (state.chatHistory[pid] || []).join("\n");
-    const vibeScore = await scoreVibes(env, convo);
+    const vibeScore = await scoreVibes(env, convo, painusProfile);
     scores[pid] = aScore + vibeScore;
   }
 
@@ -180,7 +181,7 @@ async function pickWinner(env, state) {
   await broadcast(env, state.players, `👑 The chosen one is: ${winner}`);
 }
 
-async function scoreVibes(env, chatText) {
+async function scoreVibes(env, chatText, painusProfile) {
   const painusProfile = await loadPainusProfile();
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -224,7 +225,7 @@ async function broadcast(env, playerIds, text) {
   }
 }
 
-async function getPainusReply(env, userInput) {
+async function getPainusReply(env, userInput, painusProfile) {
   const painusProfile = await loadPainusProfile();
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
