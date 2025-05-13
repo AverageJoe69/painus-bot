@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import stringPlugin from 'vite-plugin-string'; // <— THIS IS CORRECT
+import { string } from 'vite-plugin-string'; // ✅ this line is valid
 
 export default defineConfig(({ command, mode }) => {
   const isWorkerBuild = process.env.BUILD_TARGET === 'worker';
@@ -8,10 +8,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       !isWorkerBuild && react(),
-      isWorkerBuild &&
-        stringPlugin({
-          include: ["**/*.yaml", "**/*.yml"],
-        })
+      isWorkerBuild && string() // ✅ Enables YAML loading as raw string
     ].filter(Boolean),
     build: isWorkerBuild
       ? {
