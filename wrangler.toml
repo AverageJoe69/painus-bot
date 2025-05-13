@@ -1,5 +1,5 @@
 name = "painus-telegram-bot"
-main = "index.mjs"
+main = "src/worker.js"
 compatibility_date = "2025-05-09"
 
 [[kv_namespaces]]
