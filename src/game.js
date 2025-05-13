@@ -1,19 +1,9 @@
 import yaml from "js-yaml";
+import painusRaw from "./painus.yaml";
 
-let painusProfile = null;
-
-// Fetch and cache painus.yaml at runtime
-async function loadProfile() {
-  if (painusProfile) return painusProfile;
-  const res = await fetch("https://painus-telegram-bot.joejconway.workers.dev/painus.yaml");
-  const raw = await res.text();
-  painusProfile = yaml.load(raw);
-  return painusProfile;
-}
+const painusProfile = yaml.load(painusRaw);
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
-  const profile = await loadProfile();
-
   let state = await env.MEMORY.get("game_state", "json") || {
     players: [],
     phase: "recruiting",
@@ -49,7 +39,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     );
 
     if (allDone) {
-      await pickWinner(env, state, profile);
+      await pickWinner(env, state);
     }
     return;
   }
@@ -65,7 +55,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       const [p1, p2] = state.players;
       await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
       await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
-      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
+      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with \"yes\" or \"no\".`);
       return;
     }
   }
@@ -74,7 +64,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     state.votes[chatId] = msg;
     await env.MEMORY.put("game_state", JSON.stringify(state));
     await sendMessage(env, chatId, `🗳️ Vote received: ${msg.toUpperCase()}`);
-    await checkVotes(env, state, profile);
+    await checkVotes(env, state);
     return;
   }
 
@@ -83,7 +73,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     state.chatHistory[chatId].push(userMessage);
     await env.MEMORY.put("game_state", JSON.stringify(state));
 
-    const gptReply = await getPainusReply(env, userMessage, profile);
+    const gptReply = await getPainusReply(env, userMessage);
     await sendMessage(env, chatId, gptReply);
   }
 }
@@ -115,10 +105,16 @@ async function handleDebugCommand(msg, chatId, env, state) {
     return;
   }
 
+  if (msg.includes("persona")) {
+    const text = `🧠 Painus Profile:\n\n${painusProfile.persona.identity}\n\nBeliefs:\n- ${painusProfile.persona.beliefs.join("\n- ")}\n\nMotivation: ${painusProfile.persona.motivation}`;
+    await sendMessage(env, chatId, text);
+    return;
+  }
+
   await sendMessage(env, chatId, `❌ Unknown debug command: ${msg}`);
 }
 
-async function checkVotes(env, state, profile) {
+async function checkVotes(env, state) {
   const total = state.players.length;
   const received = Object.keys(state.votes).length;
   if (received < total) return;
@@ -157,7 +153,7 @@ const idealAnswers = [
   "trick question, btc is for pussies."
 ];
 
-async function pickWinner(env, state, profile) {
+async function pickWinner(env, state) {
   const scores = {};
 
   for (const pid of state.players) {
@@ -167,7 +163,7 @@ async function pickWinner(env, state, profile) {
     }, 0);
 
     const convo = (state.chatHistory[pid] || []).join("\n");
-    const vibeScore = await scoreVibes(env, convo, profile);
+    const vibeScore = await scoreVibes(env, convo);
 
     scores[pid] = aScore + vibeScore;
   }
@@ -176,7 +172,7 @@ async function pickWinner(env, state, profile) {
   await broadcast(env, state.players, `👑 The chosen one is: ${winner}`);
 }
 
-async function scoreVibes(env, chatText, profile) {
+async function scoreVibes(env, chatText) {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -188,7 +184,7 @@ async function scoreVibes(env, chatText, profile) {
       messages: [
         {
           role: "system",
-          content: `${profile.persona.identity}\nBeliefs: ${profile.persona.beliefs.join(" | ")}\nMotivation: ${profile.persona.motivation}\nNow score this player from 0 (loser) to 5 (alpha). Only return a number.`
+          content: `${painusProfile.persona.identity}\nBeliefs: ${painusProfile.persona.beliefs.join(" | ")}\nMotivation: ${painusProfile.persona.motivation}\nNow score this player from 0 (loser) to 5 (alpha). Only return a number.`
         },
         {
           role: "user",
@@ -204,33 +200,6 @@ async function scoreVibes(env, chatText, profile) {
   return Math.max(0, Math.min(num, 5));
 }
 
-async function getPainusReply(env, userInput, profile) {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `${profile.persona.identity}\nBeliefs: ${profile.persona.beliefs.join(" | ")}\nMotivation: ${profile.persona.motivation}\nYou are cocky, intense, ruthless.`
-        },
-        {
-          role: "user",
-          content: userInput
-        }
-      ],
-      max_tokens: 250
-    })
-  });
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || "Painus glitched. Say something alpha.";
-}
-
 async function sendMessage(env, chatId, text) {
   return await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
@@ -243,4 +212,31 @@ async function broadcast(env, playerIds, text) {
   for (const pid of playerIds) {
     await sendMessage(env, pid, text);
   }
+}
+
+async function getPainusReply(env, userInput) {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: `${painusProfile.persona.identity}\nBeliefs: ${painusProfile.persona.beliefs.join(" | ")}\nMotivation: ${painusProfile.persona.motivation}\nYou are cocky, intense, ruthless.`
+        },
+        {
+          role: "user",
+          content: userInput
+        }
+      ],
+      max_tokens: 250
+    })
+  });
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "Painus glitched. Say something alpha.";
 }
