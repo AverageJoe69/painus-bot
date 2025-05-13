@@ -1,9 +1,19 @@
 import yaml from "js-yaml";
-import painusRaw from "./painus.yaml"; // treated as raw string
 
-const painusProfile = yaml.load(painusRaw);
+let painusProfile = null;
+
+// Fetch and cache painus.yaml at runtime
+async function loadProfile() {
+  if (painusProfile) return painusProfile;
+  const res = await fetch("https://painus-telegram-bot.joejconway.workers.dev/painus.yaml");
+  const raw = await res.text();
+  painusProfile = yaml.load(raw);
+  return painusProfile;
+}
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
+  const profile = await loadProfile();
+
   let state = await env.MEMORY.get("game_state", "json") || {
     players: [],
     phase: "recruiting",
@@ -14,13 +24,11 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
 
   const msg = userMessage.toLowerCase().trim();
 
-  // --- Debug Commands ---
   if (msg.startsWith("/debug")) {
     await handleDebugCommand(msg, chatId, env, state);
     return true;
   }
 
-  // --- Questionnaire Phase ---
   if (state.phase === "questionnaire") {
     if (!state.responses[chatId]) {
       state.responses[chatId] = [];
@@ -41,12 +49,11 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     );
 
     if (allDone) {
-      await pickWinner(env, state);
+      await pickWinner(env, state, profile);
     }
     return;
   }
 
-  // --- Join Logic ---
   if (msg === "join" && !state.players.includes(chatId)) {
     state.players.push(chatId);
     await env.MEMORY.put("game_state", JSON.stringify(state));
@@ -63,22 +70,20 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     }
   }
 
-  // --- Vote Handling ---
   if (["yes", "no"].includes(msg) && state.players.includes(chatId)) {
     state.votes[chatId] = msg;
     await env.MEMORY.put("game_state", JSON.stringify(state));
     await sendMessage(env, chatId, `🗳️ Vote received: ${msg.toUpperCase()}`);
-    await checkVotes(env, state);
+    await checkVotes(env, state, profile);
     return;
   }
 
-  // --- GPT Chat Fallback ---
   if (state.players.includes(chatId)) {
     if (!state.chatHistory[chatId]) state.chatHistory[chatId] = [];
     state.chatHistory[chatId].push(userMessage);
     await env.MEMORY.put("game_state", JSON.stringify(state));
 
-    const gptReply = await getPainusReply(env, userMessage);
+    const gptReply = await getPainusReply(env, userMessage, profile);
     await sendMessage(env, chatId, gptReply);
   }
 }
@@ -113,7 +118,7 @@ async function handleDebugCommand(msg, chatId, env, state) {
   await sendMessage(env, chatId, `❌ Unknown debug command: ${msg}`);
 }
 
-async function checkVotes(env, state) {
+async function checkVotes(env, state, profile) {
   const total = state.players.length;
   const received = Object.keys(state.votes).length;
   if (received < total) return;
@@ -152,7 +157,7 @@ const idealAnswers = [
   "trick question, btc is for pussies."
 ];
 
-async function pickWinner(env, state) {
+async function pickWinner(env, state, profile) {
   const scores = {};
 
   for (const pid of state.players) {
@@ -162,7 +167,7 @@ async function pickWinner(env, state) {
     }, 0);
 
     const convo = (state.chatHistory[pid] || []).join("\n");
-    const vibeScore = await scoreVibes(env, convo);
+    const vibeScore = await scoreVibes(env, convo, profile);
 
     scores[pid] = aScore + vibeScore;
   }
@@ -171,7 +176,7 @@ async function pickWinner(env, state) {
   await broadcast(env, state.players, `👑 The chosen one is: ${winner}`);
 }
 
-async function scoreVibes(env, chatText) {
+async function scoreVibes(env, chatText, profile) {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -183,7 +188,7 @@ async function scoreVibes(env, chatText) {
       messages: [
         {
           role: "system",
-          content: `${painusProfile.persona.identity}\nBeliefs: ${painusProfile.persona.beliefs.join(" | ")}\nMotivation: ${painusProfile.persona.motivation}\nNow score this player from 0 (loser) to 5 (alpha). Only return a number.`
+          content: `${profile.persona.identity}\nBeliefs: ${profile.persona.beliefs.join(" | ")}\nMotivation: ${profile.persona.motivation}\nNow score this player from 0 (loser) to 5 (alpha). Only return a number.`
         },
         {
           role: "user",
@@ -199,21 +204,7 @@ async function scoreVibes(env, chatText) {
   return Math.max(0, Math.min(num, 5));
 }
 
-async function sendMessage(env, chatId, text) {
-  return await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text })
-  });
-}
-
-async function broadcast(env, playerIds, text) {
-  for (const pid of playerIds) {
-    await sendMessage(env, pid, text);
-  }
-}
-
-async function getPainusReply(env, userInput) {
+async function getPainusReply(env, userInput, profile) {
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -225,7 +216,7 @@ async function getPainusReply(env, userInput) {
       messages: [
         {
           role: "system",
-          content: `${painusProfile.persona.identity}\nBeliefs: ${painusProfile.persona.beliefs.join(" | ")}\nMotivation: ${painusProfile.persona.motivation}\nYou are cocky, intense, ruthless.`
+          content: `${profile.persona.identity}\nBeliefs: ${profile.persona.beliefs.join(" | ")}\nMotivation: ${profile.persona.motivation}\nYou are cocky, intense, ruthless.`
         },
         {
           role: "user",
@@ -238,4 +229,18 @@ async function getPainusReply(env, userInput) {
 
   const data = await res.json();
   return data.choices?.[0]?.message?.content || "Painus glitched. Say something alpha.";
+}
+
+async function sendMessage(env, chatId, text) {
+  return await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId, text })
+  });
+}
+
+async function broadcast(env, playerIds, text) {
+  for (const pid of playerIds) {
+    await sendMessage(env, pid, text);
+  }
 }
