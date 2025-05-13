@@ -1,17 +1,17 @@
 import yaml from "js-yaml";
 
-let cachedProfile = null;
-
-async function getPainusProfile() {
-  if (cachedProfile) return cachedProfile;
-
-  const res = await fetch("https://painus-telegram-bot.joejconway.workers.dev/painus.yaml");
-  const text = await res.text();
-  cachedProfile = yaml.load(text);
-  return cachedProfile;
+let painusProfile = null;
+async function loadProfile() {
+  if (!painusProfile) {
+    const res = await fetch("https://painus-telegram-bot.joejconway.workers.dev/painus.yaml");
+    const text = await res.text();
+    painusProfile = yaml.load(text);
+  }
 }
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
+  await loadProfile();
+
   let state = await env.MEMORY.get("game_state", "json") || {
     players: [],
     phase: "recruiting",
@@ -28,9 +28,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   }
 
   if (state.phase === "questionnaire") {
-    if (!state.responses[chatId]) {
-      state.responses[chatId] = [];
-    }
+    if (!state.responses[chatId]) state.responses[chatId] = [];
     const qIndex = state.responses[chatId].length;
     state.responses[chatId].push(userMessage);
 
@@ -55,7 +53,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   if (msg === "join" && !state.players.includes(chatId)) {
     state.players.push(chatId);
     await env.MEMORY.put("game_state", JSON.stringify(state));
-  
+
     if (state.players.length === 1) {
       await sendMessage(env, chatId, `📈 Yo — you’re early.\n\nRugging’s tough right now but I’m working every angle.\nGive me a minute... I should have a solid 2X ROI very soon. 🧪`);
     } else if (state.players.length === 2) {
@@ -64,8 +62,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
       await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
     }
-  
-    return true; // ✅ This ensures the main handler logs it as handled  
+    return;
   }
 
   if (["yes", "no"].includes(msg) && state.players.includes(chatId)) {
@@ -114,7 +111,6 @@ async function handleDebugCommand(msg, chatId, env, state) {
   }
 
   if (msg.includes("persona")) {
-    const painusProfile = await getPainusProfile();
     const text = `🧠 Painus Profile:\n\n${painusProfile.persona.identity}\n\nBeliefs:\n- ${painusProfile.persona.beliefs.join("\n- ")}\n\nMotivation: ${painusProfile.persona.motivation}`;
     await sendMessage(env, chatId, text);
     return;
@@ -182,7 +178,8 @@ async function pickWinner(env, state) {
 }
 
 async function scoreVibes(env, chatText) {
-  const painusProfile = await getPainusProfile();
+  await loadProfile();
+
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -225,7 +222,8 @@ async function broadcast(env, playerIds, text) {
 }
 
 async function getPainusReply(env, userInput) {
-  const painusProfile = await getPainusProfile();
+  await loadProfile();
+
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
