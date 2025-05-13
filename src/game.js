@@ -4,6 +4,7 @@ let cachedProfile = null;
 
 export async function loadPainusProfile() {
   if (cachedProfile) return cachedProfile;
+
   const url = "https://painus-telegram-bot.joejconway.workers.dev/painus.yaml";
   const res = await fetch(url);
   const raw = await res.text();
@@ -13,8 +14,8 @@ export async function loadPainusProfile() {
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
   console.log("🧪 handleJoinAndChat hit", chatId, userMessage);
-
   const painusProfile = await loadPainusProfile();
+
   let state = await env.MEMORY.get("game_state", "json") || {
     players: [],
     phase: "recruiting",
@@ -61,14 +62,13 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
 
     if (state.players.length === 1) {
       await sendMessage(env, chatId, `📈 Yo — you’re early.\n\nRugging’s tough right now but I’m working every angle.\nGive me a minute... I should have a solid 2X ROI very soon. 🧪`);
-      return;
     } else if (state.players.length === 2) {
       const [p1, p2] = state.players;
       await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
       await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
       await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
-      return;
     }
+    return;
   }
 
   if (["yes", "no"].includes(msg) && state.players.includes(chatId)) {
