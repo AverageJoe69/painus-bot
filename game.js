@@ -1,6 +1,19 @@
-// game.js
-
 export async function handleJoinAndChat(chatId, userMessage, env) {
+    const msg = userMessage.toLowerCase().trim();
+  
+    // --- Debug Commands ---
+    if (msg.startsWith("/debug")) {
+      let state = await env.MEMORY.get("game_state", "json") || {
+        players: [],
+        phase: "recruiting",
+        votes: {},
+        responses: {},
+        chatHistory: {}
+      };
+      await handleDebugCommand(msg, chatId, env, state);
+      return true;
+    }
+  
     let state = await env.MEMORY.get("game_state", "json") || {
       players: [],
       phase: "recruiting",
@@ -9,20 +22,11 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       chatHistory: {}
     };
   
-    const msg = userMessage.toLowerCase().trim();
-  
-    // --- Debug Commands ---
-    if (msg.startsWith("/debug")) {
-      await handleDebugCommand(msg, chatId, env, state);
-      return true;
-    }
-  
     // --- Questionnaire Phase ---
     if (state.phase === "questionnaire") {
       if (!state.responses[chatId]) {
         state.responses[chatId] = [];
       }
-  
       const qIndex = state.responses[chatId].length;
       state.responses[chatId].push(userMessage);
   
@@ -41,8 +45,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       if (allDone) {
         await pickWinner(env, state);
       }
-  
-      return false;
+      return;
     }
   
     // --- Join Logic ---
@@ -52,14 +55,14 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   
       if (state.players.length === 1) {
         await sendMessage(env, chatId, `📈 Yo — you’re early.\n\nRugging’s tough right now but I’m working every angle.\nGive me a minute... I should have a solid 2X ROI very soon. 🧪`);
+        return;
       } else if (state.players.length === 2) {
         const [p1, p2] = state.players;
         await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
         await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
         await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
+        return;
       }
-  
-      return false;
     }
   
     // --- Vote Handling ---
@@ -68,7 +71,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       await env.MEMORY.put("game_state", JSON.stringify(state));
       await sendMessage(env, chatId, `🗳️ Vote received: ${msg.toUpperCase()}`);
       await checkVotes(env, state);
-      return false;
+      return;
     }
   
     // --- GPT Chat Fallback ---
@@ -80,9 +83,6 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       const gptReply = await getPainusReply(env, userMessage);
       await sendMessage(env, chatId, gptReply);
     }
-  
-    // --- Safe fallback return ---
-    return false;
   }
   
   async function handleDebugCommand(msg, chatId, env, state) {
