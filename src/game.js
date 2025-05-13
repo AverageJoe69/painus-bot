@@ -52,7 +52,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     return;
   }
 
-  iif (msg === "join" && !state.players.includes(chatId)) {
+  if (msg === "join" && !state.players.includes(chatId)) {
     state.players.push(chatId);
     await env.MEMORY.put("game_state", JSON.stringify(state));
   
