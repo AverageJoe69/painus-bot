@@ -10,12 +10,12 @@ export default defineConfig(({ command, mode }) => {
       ? {
           target: 'esnext',
           outDir: 'dist',
+          minify: false, // 👈 DO NOT STRIP LOGS
           lib: {
             entry: 'src/worker.js',
             formats: ['es'],
             fileName: () => 'worker.js'
           },
-          minify: false, // 👈 DON'T STRIP console.log!
           rollupOptions: {
             external: []
           }

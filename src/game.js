@@ -13,8 +13,6 @@ export async function loadPainusProfile() {
 }
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
-  const painusProfile = await loadPainusProfile();
-
   let state = await env.MEMORY.get("game_state", "json") || {
     players: [],
     phase: "recruiting",
@@ -66,7 +64,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       const [p1, p2] = state.players;
       await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
       await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
-      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
+      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with \"yes\" or \"no\".`);
       return;
     }
   }
@@ -90,8 +88,6 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
 }
 
 async function handleDebugCommand(msg, chatId, env, state) {
-  const painusProfile = await loadPainusProfile();
-
   if (msg.includes("reset")) {
     await env.MEMORY.delete("game_state");
     await sendMessage(env, chatId, `🧹 Dev: Game state reset.`);
@@ -119,7 +115,8 @@ async function handleDebugCommand(msg, chatId, env, state) {
   }
 
   if (msg.includes("persona")) {
-    const text = `🧠 Painus Profile:\n\n${painusProfile.persona.identity}\n\nBeliefs:\n- ${painusProfile.persona.beliefs.join("\n- ")}\n\nMotivation: ${painusProfile.persona.motivation}`;
+    const profile = await loadPainusProfile();
+    const text = `🧠 Painus Profile:\n\n${profile.persona.identity}\n\nBeliefs:\n- ${profile.persona.beliefs.join("\n- ")}\n\nMotivation: ${profile.persona.motivation}`;
     await sendMessage(env, chatId, text);
     return;
   }
@@ -167,9 +164,7 @@ const idealAnswers = [
 ];
 
 async function pickWinner(env, state) {
-  const painusProfile = await loadPainusProfile();
   const scores = {};
-
   for (const pid of state.players) {
     const answers = (state.responses[pid] || []).map(a => a.toLowerCase());
     const aScore = answers.reduce((score, ans, i) => {
@@ -178,7 +173,6 @@ async function pickWinner(env, state) {
 
     const convo = (state.chatHistory[pid] || []).join("\n");
     const vibeScore = await scoreVibes(env, convo);
-
     scores[pid] = aScore + vibeScore;
   }
 
