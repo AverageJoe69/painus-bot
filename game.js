@@ -11,7 +11,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   
     if (msg.startsWith("/debug")) {
       await handleDebugCommand(msg, chatId, env, state);
-      return;
+      return true; // tell index.mjs we handled it
     }
   
     // --- Questionnaire Phase ---
@@ -75,7 +75,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       const gptReply = await getPainusReply(env, userMessage);
       await sendMessage(env, chatId, gptReply);
     }
-  }
+  }  
   
   async function handleDebugCommand(msg, chatId, env, state) {
     if (msg.includes("reset")) {
