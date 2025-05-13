@@ -1,14 +1,19 @@
 export default {
   async fetch(request) {
-    console.log("🌐 Incoming request:", request.method, new URL(request.url).pathname);
+    console.log("✅ Telegram ping received:");
+    console.log("Method:", request.method);
+    console.log("URL:", request.url);
 
-    if (request.method === "POST") {
-      const body = await request.json();
-      console.log("📨 Payload:", JSON.stringify(body));
-
-      return new Response("pong", { status: 200 });
+    try {
+      const body = await request.text();
+      console.log("Body:", body);
+    } catch (e) {
+      console.log("No body or failed to read.");
     }
 
-    return new Response("Not found", { status: 404 });
+    return new Response("pong", {
+      status: 200,
+      headers: { "Content-Type": "text/plain" }
+    });
   }
-};
+}
