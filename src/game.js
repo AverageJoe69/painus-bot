@@ -52,20 +52,20 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     return;
   }
 
-  if (msg === "join" && !state.players.includes(chatId)) {
+  iif (msg === "join" && !state.players.includes(chatId)) {
     state.players.push(chatId);
     await env.MEMORY.put("game_state", JSON.stringify(state));
-
+  
     if (state.players.length === 1) {
       await sendMessage(env, chatId, `📈 Yo — you’re early.\n\nRugging’s tough right now but I’m working every angle.\nGive me a minute... I should have a solid 2X ROI very soon. 🧪`);
-      return;
     } else if (state.players.length === 2) {
       const [p1, p2] = state.players;
       await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
       await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
-      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with \"yes\" or \"no\".`);
-      return;
+      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
     }
+  
+    return true; // ✅ This ensures the main handler logs it as handled  
   }
 
   if (["yes", "no"].includes(msg) && state.players.includes(chatId)) {
