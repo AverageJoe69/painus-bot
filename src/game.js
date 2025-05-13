@@ -1,3 +1,5 @@
+// ✅ Rollback to stable state before debug tools were added
+
 import yaml from "js-yaml";
 import painusRaw from "./painus.yaml";
 
@@ -13,11 +15,6 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   };
 
   const msg = userMessage.toLowerCase().trim();
-
-  if (msg.startsWith("/debug")) {
-    await handleDebugCommand(msg, chatId, env, state);
-    return true;
-  }
 
   if (state.phase === "questionnaire") {
     if (!state.responses[chatId]) {
@@ -55,7 +52,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       const [p1, p2] = state.players;
       await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
       await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
-      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with \"yes\" or \"no\".`);
+      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
       return;
     }
   }
@@ -76,42 +73,6 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     const gptReply = await getPainusReply(env, userMessage);
     await sendMessage(env, chatId, gptReply);
   }
-}
-
-async function handleDebugCommand(msg, chatId, env, state) {
-  if (msg.includes("reset")) {
-    await env.MEMORY.delete("game_state");
-    await sendMessage(env, chatId, `🧹 Dev: Game state reset.`);
-    return;
-  }
-
-  if (msg.includes("set-players")) {
-    const count = parseInt(msg.split(" ")[2] || "2", 10);
-    state.players = Array.from({ length: count }, (_, i) => `debug_user_${i + 1}`);
-    state.votes = {};
-    state.chatHistory = {};
-    state.responses = {};
-    await env.MEMORY.put("game_state", JSON.stringify(state));
-    await sendMessage(env, chatId, `👥 Dev: Set ${count} fake players.`);
-    return;
-  }
-
-  if (msg.includes("vote-all")) {
-    const vote = msg.split(" ")[2] || "no";
-    state.players.forEach(pid => (state.votes[pid] = vote));
-    await env.MEMORY.put("game_state", JSON.stringify(state));
-    await sendMessage(env, chatId, `🗳️ Dev: All players voted '${vote}'.`);
-    await checkVotes(env, state);
-    return;
-  }
-
-  if (msg.includes("persona")) {
-    const text = `🧠 Painus Profile:\n\n${painusProfile.persona.identity}\n\nBeliefs:\n- ${painusProfile.persona.beliefs.join("\n- ")}\n\nMotivation: ${painusProfile.persona.motivation}`;
-    await sendMessage(env, chatId, text);
-    return;
-  }
-
-  await sendMessage(env, chatId, `❌ Unknown debug command: ${msg}`);
 }
 
 async function checkVotes(env, state) {
