@@ -4,7 +4,6 @@ let cachedProfile = null;
 
 export async function loadPainusProfile() {
   if (cachedProfile) return cachedProfile;
-
   const url = "https://painus-telegram-bot.joejconway.workers.dev/painus.yaml";
   const res = await fetch(url);
   const raw = await res.text();
@@ -49,7 +48,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     );
 
     if (allDone) {
-      await pickWinner(env, state);
+      await pickWinner(env, state, painusProfile);
     }
     return;
   }
@@ -65,7 +64,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       const [p1, p2] = state.players;
       await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
       await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
-      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with \"yes\" or \"no\".`);
+      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
       return;
     }
   }
@@ -74,7 +73,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     state.votes[chatId] = msg;
     await env.MEMORY.put("game_state", JSON.stringify(state));
     await sendMessage(env, chatId, `🗳️ Vote received: ${msg.toUpperCase()}`);
-    await checkVotes(env, state);
+    await checkVotes(env, state, painusProfile);
     return;
   }
 
@@ -111,13 +110,12 @@ async function handleDebugCommand(msg, chatId, env, state, painusProfile) {
     state.players.forEach(pid => (state.votes[pid] = vote));
     await env.MEMORY.put("game_state", JSON.stringify(state));
     await sendMessage(env, chatId, `🗳️ Dev: All players voted '${vote}'.`);
-    await checkVotes(env, state);
+    await checkVotes(env, state, painusProfile);
     return;
   }
 
   if (msg.includes("persona")) {
-    const profile = await loadPainusProfile();
-    const text = `🧠 Painus Profile:\n\n${profile.persona.identity}\n\nBeliefs:\n- ${profile.persona.beliefs.join("\n- ")}\n\nMotivation: ${profile.persona.motivation}`;
+    const text = `🧠 Painus Profile:\n\n${painusProfile.persona.identity}\n\nBeliefs:\n- ${painusProfile.persona.beliefs.join("\n- ")}\n\nMotivation: ${painusProfile.persona.motivation}`;
     await sendMessage(env, chatId, text);
     return;
   }
@@ -125,7 +123,7 @@ async function handleDebugCommand(msg, chatId, env, state, painusProfile) {
   await sendMessage(env, chatId, `❌ Unknown debug command: ${msg}`);
 }
 
-async function checkVotes(env, state) {
+async function checkVotes(env, state, painusProfile) {
   const total = state.players.length;
   const received = Object.keys(state.votes).length;
   if (received < total) return;
@@ -164,7 +162,7 @@ const idealAnswers = [
   "trick question, btc is for pussies."
 ];
 
-async function pickWinner(env, state) {
+async function pickWinner(env, state, painusProfile) {
   const scores = {};
   for (const pid of state.players) {
     const answers = (state.responses[pid] || []).map(a => a.toLowerCase());
@@ -182,8 +180,6 @@ async function pickWinner(env, state) {
 }
 
 async function scoreVibes(env, chatText, painusProfile) {
-  const painusProfile = await loadPainusProfile();
-
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -226,8 +222,6 @@ async function broadcast(env, playerIds, text) {
 }
 
 async function getPainusReply(env, userInput, painusProfile) {
-  const painusProfile = await loadPainusProfile();
-
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
