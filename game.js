@@ -9,31 +9,9 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   
     const msg = userMessage.toLowerCase().trim();
   
-    // --- Dev Commands ---
     if (msg.startsWith("/debug")) {
-      if (msg.includes("reset")) {
-        await env.MEMORY.delete("game_state");
-        await sendMessage(env, chatId, `🧹 Dev: Game state reset.`);
-        return;
-      }
-      if (msg.includes("set-players")) {
-        const count = parseInt(msg.split(" ")[2] || "2", 10);
-        state.players = Array.from({ length: count }, (_, i) => `debug_user_${i + 1}`);
-        state.votes = {};
-        state.chatHistory = {};
-        state.responses = {};
-        await env.MEMORY.put("game_state", JSON.stringify(state));
-        await sendMessage(env, chatId, `👥 Dev: Set ${count} fake players.`);
-        return;
-      }
-      if (msg.includes("vote-all")) {
-        const vote = msg.split(" ")[2] || "no";
-        state.players.forEach(pid => (state.votes[pid] = vote));
-        await env.MEMORY.put("game_state", JSON.stringify(state));
-        await sendMessage(env, chatId, `🗳️ Dev: All players voted '${vote}'.`);
-        await checkVotes(env, state);
-        return;
-      }
+      await handleDebugCommand(msg, chatId, env, state);
+      return;
     }
   
     // --- Questionnaire Phase ---
@@ -68,18 +46,13 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
       await env.MEMORY.put("game_state", JSON.stringify(state));
   
       if (state.players.length === 1) {
-        await sendMessage(env, chatId, `📈 Yo — you’re early.
-  
-  Rugging’s tough right now but I’m working every angle.  
-  Give me a minute... I should have a solid 2X ROI very soon. 🧪`);
+        await sendMessage(env, chatId, `📈 Yo — you’re early.\n\nRugging’s tough right now but I’m working every angle.\nGive me a minute... I should have a solid 2X ROI very soon. 🧪`);
         return;
       } else if (state.players.length === 2) {
         const [p1, p2] = state.players;
         await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
         await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
-        await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.
-  
-  Reply with "yes" or "no".`);
+        await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
         return;
       }
     }
@@ -104,6 +77,36 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     }
   }
   
+  async function handleDebugCommand(msg, chatId, env, state) {
+    if (msg.includes("reset")) {
+      await env.MEMORY.delete("game_state");
+      await sendMessage(env, chatId, `🧹 Dev: Game state reset.`);
+      return;
+    }
+  
+    if (msg.includes("set-players")) {
+      const count = parseInt(msg.split(" ")[2] || "2", 10);
+      state.players = Array.from({ length: count }, (_, i) => `debug_user_${i + 1}`);
+      state.votes = {};
+      state.chatHistory = {};
+      state.responses = {};
+      await env.MEMORY.put("game_state", JSON.stringify(state));
+      await sendMessage(env, chatId, `👥 Dev: Set ${count} fake players.`);
+      return;
+    }
+  
+    if (msg.includes("vote-all")) {
+      const vote = msg.split(" ")[2] || "no";
+      state.players.forEach(pid => (state.votes[pid] = vote));
+      await env.MEMORY.put("game_state", JSON.stringify(state));
+      await sendMessage(env, chatId, `🗳️ Dev: All players voted '${vote}'.`);
+      await checkVotes(env, state);
+      return;
+    }
+  
+    await sendMessage(env, chatId, `❌ Unknown debug command: ${msg}`);
+  }
+  
   async function checkVotes(env, state) {
     const total = state.players.length;
     const received = Object.keys(state.votes).length;
@@ -111,9 +114,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   
     const allYes = state.players.every(pid => state.votes[pid] === "yes");
     if (allYes) {
-      await broadcast(env, state.players, `🧠 Serious moment... the investment session is now closed.
-  
-  💀 Profit allocation will begin shortly.`);
+      await broadcast(env, state.players, `🧠 Serious moment... the investment session is now closed.\n\n💀 Profit allocation will begin shortly.`);
       await broadcast(env, state.players, `😂 Okay I'm back — only a few more rugs to pull! Get ready.`);
       state.phase = "questionnaire";
       for (const pid of state.players) {
@@ -123,7 +124,7 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
     } else {
       await broadcast(env, state.players, `📉 Not unanimous. Investment session continues. Holding strong.`);
     }
-    state.votes = {}; // reset votes either way
+    state.votes = {};
     await env.MEMORY.put("game_state", JSON.stringify(state));
   }
   
