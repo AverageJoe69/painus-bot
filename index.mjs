@@ -29,6 +29,8 @@ export default {
 
     // --- Telegram Handler ---
     if (request.method === "POST" && pathname === "/") {
+      console.log("📩 Got POST / from Telegram");
+
       try {
         const body = await request.json();
         const message = body?.message;
