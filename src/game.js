@@ -7,8 +7,24 @@ export async function loadPainusProfile() {
 
   const url = "https://painus-telegram-bot.joejconway.workers.dev/painus.yaml";
   const res = await fetch(url);
+  if (!res.ok) {
+    console.error("❌ Failed to fetch painus.yaml:", res.status);
+    throw new Error("Failed to load Painus profile");
+  }
+
   const raw = await res.text();
-  cachedProfile = yaml.load(raw);
+  try {
+    cachedProfile = yaml.load(raw);
+  } catch (err) {
+    console.error("❌ YAML parsing error:", err);
+    throw err;
+  }
+
+  if (!cachedProfile?.persona?.identity) {
+    console.error("❌ Invalid painusProfile format:", cachedProfile);
+    throw new Error("Invalid profile");
+  }
+
   return cachedProfile;
 }
 
@@ -26,10 +42,13 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
 
   const msg = userMessage.toLowerCase().trim();
 
+  const painusProfile = await loadPainusProfile();
+
   if (msg.startsWith("/debug")) {
     await handleDebugCommand(msg, chatId, env, state, painusProfile);
     return true;
   }
+  
 
   if (state.phase === "questionnaire") {
     if (!state.responses[chatId]) {
