@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import yaml from 'vite-plugin-yaml2';
+import stringPlugin from 'vite-plugin-string';
 
 export default defineConfig(({ command, mode }) => {
   const isWorkerBuild = process.env.BUILD_TARGET === 'worker';
@@ -8,7 +8,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       !isWorkerBuild && react(),
-      isWorkerBuild && yaml()
+      isWorkerBuild && stringPlugin()
     ].filter(Boolean),
     build: isWorkerBuild
       ? {

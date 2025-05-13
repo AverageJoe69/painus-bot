@@ -24,7 +24,7 @@ export default {
         });
       } catch (err) {
         console.error("❌ ETH send error:", err);
-        return new Response("Painus glitched sending ETH.", { status: 500 });
+        return new Response("OK", { status: 200 }); // Safer default for webhook compatibility
       }
     }
 
@@ -49,15 +49,14 @@ export default {
 
         if (handled === true) {
           console.log("✅ Message handled by game.js logic");
-          return new Response("OK");
+        } else {
+          console.log("🟡 Message not handled by game.js");
         }
-
-        console.log("🟡 Message not handled by game.js");
 
         return new Response("OK");
       } catch (err) {
         console.error("🔥 Telegram Handler Error:", err);
-        return new Response("Painus glitched. Try again later.", { status: 500 });
+        return new Response("OK", { status: 200 });
       }
     }
 
