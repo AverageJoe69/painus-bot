@@ -1,12 +1,11 @@
-import yaml from "js-yaml";
-
 let painusProfile = null;
+
 async function loadProfile() {
-  if (!painusProfile) {
-    const res = await fetch("https://painus-telegram-bot.joejconway.workers.dev/painus.yaml");
-    const text = await res.text();
-    painusProfile = yaml.load(text);
-  }
+  if (painusProfile) return;
+  const res = await fetch("/painus.yaml");
+  const raw = await res.text();
+  const yaml = await import("js-yaml");
+  painusProfile = yaml.load(raw);
 }
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
@@ -28,7 +27,9 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   }
 
   if (state.phase === "questionnaire") {
-    if (!state.responses[chatId]) state.responses[chatId] = [];
+    if (!state.responses[chatId]) {
+      state.responses[chatId] = [];
+    }
     const qIndex = state.responses[chatId].length;
     state.responses[chatId].push(userMessage);
 
@@ -56,13 +57,14 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
 
     if (state.players.length === 1) {
       await sendMessage(env, chatId, `📈 Yo — you’re early.\n\nRugging’s tough right now but I’m working every angle.\nGive me a minute... I should have a solid 2X ROI very soon. 🧪`);
+      return;
     } else if (state.players.length === 2) {
       const [p1, p2] = state.players;
       await sendMessage(env, p2, `💸 Let's go! We’ve locked in 2X profits!`);
       await sendMessage(env, p1, `📢 Yo, profits just hit 2X.`);
-      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with "yes" or "no".`);
+      await broadcast(env, state.players, `🧠 To close this investment session and realise profits, all investors must unanimously vote to end the session.\n\nReply with \"yes\" or \"no\".`);
+      return;
     }
-    return;
   }
 
   if (["yes", "no"].includes(msg) && state.players.includes(chatId)) {
@@ -111,6 +113,7 @@ async function handleDebugCommand(msg, chatId, env, state) {
   }
 
   if (msg.includes("persona")) {
+    await loadProfile();
     const text = `🧠 Painus Profile:\n\n${painusProfile.persona.identity}\n\nBeliefs:\n- ${painusProfile.persona.beliefs.join("\n- ")}\n\nMotivation: ${painusProfile.persona.motivation}`;
     await sendMessage(env, chatId, text);
     return;
@@ -160,7 +163,6 @@ const idealAnswers = [
 
 async function pickWinner(env, state) {
   const scores = {};
-
   for (const pid of state.players) {
     const answers = (state.responses[pid] || []).map(a => a.toLowerCase());
     const aScore = answers.reduce((score, ans, i) => {
@@ -169,7 +171,6 @@ async function pickWinner(env, state) {
 
     const convo = (state.chatHistory[pid] || []).join("\n");
     const vibeScore = await scoreVibes(env, convo);
-
     scores[pid] = aScore + vibeScore;
   }
 
