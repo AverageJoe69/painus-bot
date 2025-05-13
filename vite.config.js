@@ -1,15 +1,11 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import stringPlugin from 'vite-plugin-string'; // use default import
+import yaml from 'vite-plugin-yaml2';
 
 export default defineConfig(({ command, mode }) => {
   const isWorkerBuild = process.env.BUILD_TARGET === 'worker';
 
   return {
-    plugins: [
-      !isWorkerBuild && react(),
-      isWorkerBuild && stringPlugin()
-    ].filter(Boolean),
+    plugins: [isWorkerBuild && yaml()].filter(Boolean),
     build: isWorkerBuild
       ? {
           target: 'esnext',
@@ -19,8 +15,9 @@ export default defineConfig(({ command, mode }) => {
             formats: ['es'],
             fileName: () => 'worker.js'
           },
+          minify: false, // 👈 DON'T STRIP console.log!
           rollupOptions: {
-            external: [],
+            external: []
           }
         }
       : {}
