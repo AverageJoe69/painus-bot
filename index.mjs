@@ -5,6 +5,7 @@ export default {
   async fetch(request, env, ctx) {
     const pathname = new URL(request.url).pathname;
 
+    // --- ETH Transfer Endpoint ---
     if (request.method === "POST" && pathname === "/send-eth") {
       try {
         const { to, amount } = await request.json();
@@ -26,29 +27,31 @@ export default {
       }
     }
 
+    // --- Telegram Handler ---
     if (request.method === "POST" && pathname === "/") {
       try {
         const body = await request.json();
         const message = body?.message;
-    
+
         if (!message || !message.chat || !message.text) {
           console.warn("No message payload found");
           return new Response("OK");
         }
-    
+
         const chatId = message.chat.id;
         const userMessage = message.text;
-    
-        await handleJoinAndChat(chatId, userMessage, env);
-    
+
+        const handled = await handleJoinAndChat(chatId, userMessage, env);
+        if (handled === true) return new Response("OK");
+
         return new Response("OK");
       } catch (err) {
         console.error("Worker Error:", err);
         return new Response("Painus glitched. Try again later.", { status: 500 });
       }
     }
-    
 
+    // --- Fallback for unknown paths ---
     return new Response("Not found", { status: 404 });
   }
 };
