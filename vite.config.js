@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 import stringPlugin from 'vite-plugin-string';
 
 export default defineConfig(({ command, mode }) => {
@@ -7,8 +6,9 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins: [
-      !isWorkerBuild && react(),
-      isWorkerBuild && stringPlugin()
+      isWorkerBuild && stringPlugin({
+        include: ['**/*.yaml'], // tell it what files to load
+      })
     ].filter(Boolean),
     build: isWorkerBuild
       ? {
@@ -19,9 +19,6 @@ export default defineConfig(({ command, mode }) => {
             formats: ['es'],
             fileName: () => 'worker.js'
           },
-          rollupOptions: {
-            external: [],
-          }
         }
       : {}
   };

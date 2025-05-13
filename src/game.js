@@ -1,5 +1,5 @@
 import yaml from "js-yaml";
-import painusRaw from "./painus.yaml";
+import painusRaw from "./painus.yaml"; // treated as raw string
 
 const painusProfile = yaml.load(painusRaw);
 
