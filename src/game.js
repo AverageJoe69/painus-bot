@@ -12,6 +12,8 @@ export async function loadPainusProfile() {
 }
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
+  console.log("🧪 handleJoinAndChat hit", chatId, userMessage);
+
   const painusProfile = await loadPainusProfile();
   let state = await env.MEMORY.get("game_state", "json") || {
     players: [],
