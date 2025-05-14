@@ -30,7 +30,7 @@ export async function loadPainusProfile() {
 
 export async function handleJoinAndChat(chatId, userMessage, env) {
   console.log("🧪 handleJoinAndChat hit", chatId, userMessage);
-  const painusProfile = await loadPainusProfile();
+  const painusProfile = await loadPainusProfile(); // ✅ Keep this one only
 
   let state = await env.MEMORY.get("game_state", "json") || {
     players: [],
@@ -41,8 +41,6 @@ export async function handleJoinAndChat(chatId, userMessage, env) {
   };
 
   const msg = userMessage.toLowerCase().trim();
-
-  const painusProfile = await loadPainusProfile();
 
   if (msg.startsWith("/debug")) {
     await handleDebugCommand(msg, chatId, env, state, painusProfile);
